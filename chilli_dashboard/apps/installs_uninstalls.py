@@ -14,7 +14,7 @@ from dateutil.relativedelta import relativedelta
 from app import app
 from apps.db.db_conn import DbConn
 from apps.models.install_model import InstallModel
-# from apps.models.uninstall_model import UninstallModel
+from apps.models.uninstall_model import UninstallModel
 
 past_month = relativedelta(months=1)
 current_date = datetime.date.today()
@@ -47,14 +47,13 @@ layout=html.Div([
 ),
     html.Div([html.H1('Overall trend', style={"textAlign": "center"}),
 	html.Div([html.H2('Installs', style={"textAlign": "center"}),
-	html.Div([dcc.Loading(children=[dcc.Graph(id = "installs_graph")])])],style={'width': '48%', 'display': 'inline-block'})
-    # ,
+	html.Div([dcc.Loading(children=[dcc.Graph(id = "installs_graph")])])],style={'width': '48%', 'display': 'inline-block'}),
 
-    # html.Div([html.H2('Uninstalls', style={"textAlign": "center"}),
-	# html.Div([dcc.Loading(children=[dcc.Graph(id = "uninstalls_graph")])])],style={'width': '48%', 'display': 'inline-block'}), 
+    html.Div([html.H2('Uninstalls', style={"textAlign": "center"}),
+	html.Div([dcc.Loading(children=[dcc.Graph(id = "uninstalls_graph")])])],style={'width': '48%', 'display': 'inline-block'}), 
 
-    # html.Div([html.H2('Installs vs. Uninstalls', style={"textAlign": "center"}),
-    # html.Div([dcc.Loading(children=[dcc.Graph(id = "versus")])])])
+    html.Div([html.H2('Installs vs. Uninstalls', style={"textAlign": "center"}),
+    html.Div([dcc.Loading(children=[dcc.Graph(id = "versus")])])])
 					])
 ])
 
@@ -80,60 +79,60 @@ def update_graph_installs (start_date, end_date):
     
     return fig_installs
 
-# @app.callback(
-#     dash.dependencies.Output('uninstalls_graph', 'figure'),
-#     [dash.dependencies.Input('picker-range-in-un', 'start_date'),
-#      dash.dependencies.Input('picker-range-in-un', 'end_date')]
-# )
+@app.callback(
+    dash.dependencies.Output('uninstalls_graph', 'figure'),
+    [dash.dependencies.Input('picker-range-in-un', 'start_date'),
+     dash.dependencies.Input('picker-range-in-un', 'end_date')]
+)
 
-# def update_graph_uninstalls (start_date, end_date):
-#     chosen_dates_uninstalls = UninstallModel().get_data(start_date,end_date) #logs
-#     chosen_dates_reset_uninstalls = chosen_dates_uninstalls.reset_index()
-#     x_row_u = chosen_dates_reset_uninstalls["event_date"]
-#     df_columns_u = chosen_dates_reset_uninstalls.iloc[:, 1:]
-#     y_columns_u = list(df_columns_u)
+def update_graph_uninstalls (start_date, end_date):
+    chosen_dates_uninstalls = UninstallModel().get_data(start_date,end_date) #logs
+    chosen_dates_reset_uninstalls = chosen_dates_uninstalls.reset_index()
+    x_row_u = chosen_dates_reset_uninstalls["event_date"]
+    df_columns_u = chosen_dates_reset_uninstalls.iloc[:, 1:]
+    y_columns_u = list(df_columns_u)
 
-#     fig_uninstalls = px.bar(chosen_dates_reset_uninstalls, 
-#     x=x_row_u, y=y_columns_u,labels={
-#                         "value": "Events",
-#                         "variable": "Uninstallations per plan:",
-#                         "event_date": "Uninstalled at"}
-#     )
+    fig_uninstalls = px.bar(chosen_dates_reset_uninstalls, 
+    x=x_row_u, y=y_columns_u,labels={
+                        "value": "Events",
+                        "variable": "Uninstallations per plan:",
+                        "event_date": "Uninstalled at"}
+    )
 
-#     return fig_uninstalls
+    return fig_uninstalls
 
-# @app.callback(
-#     dash.dependencies.Output('versus', 'figure'),
-#     [dash.dependencies.Input('picker-range-in-un', 'start_date'),
-#      dash.dependencies.Input('picker-range-in-un', 'end_date')]
-# )
+@app.callback(
+    dash.dependencies.Output('versus', 'figure'),
+    [dash.dependencies.Input('picker-range-in-un', 'start_date'),
+     dash.dependencies.Input('picker-range-in-un', 'end_date')]
+)
 
-# def update_graph_versus (start_date, end_date):
-#     chosen_dates1 = InstallModel().get_data(start_date,end_date)
-#     chosen_dates2 = UninstallModel().get_data(start_date,end_date)
-#     chosen_dates_reset1 = chosen_dates1.reset_index()
-#     chosen_dates_reset2 = chosen_dates2.reset_index()
+def update_graph_versus (start_date, end_date):
+    chosen_dates1 = InstallModel().get_data(start_date,end_date)
+    chosen_dates2 = UninstallModel().get_data(start_date,end_date)
+    chosen_dates_reset1 = chosen_dates1.reset_index()
+    chosen_dates_reset2 = chosen_dates2.reset_index()
 
-#     sum_installs = pd.Series(index=chosen_dates_reset1.columns, dtype = 'float64')
-#     for i, idx in enumerate(chosen_dates_reset1.columns, 1):
-#         sum_installs[idx] = chosen_dates_reset1.iloc[:,:i].all(axis=1).sum()
+    sum_installs = pd.Series(index=chosen_dates_reset1.columns, dtype = 'float64')
+    for i, idx in enumerate(chosen_dates_reset1.columns, 1):
+        sum_installs[idx] = chosen_dates_reset1.iloc[:,:i].all(axis=1).sum()
     
-#     sum_uninstalls = pd.Series(index=chosen_dates_reset2.columns, dtype = 'float64')
-#     for i, idx in enumerate(chosen_dates_reset2.columns, 1):
-#         sum_uninstalls[idx] = chosen_dates_reset2.iloc[:,:i].all(axis=1).sum()
+    sum_uninstalls = pd.Series(index=chosen_dates_reset2.columns, dtype = 'float64')
+    for i, idx in enumerate(chosen_dates_reset2.columns, 1):
+        sum_uninstalls[idx] = chosen_dates_reset2.iloc[:,:i].all(axis=1).sum()
     
-#     sum_uninstalls = sum_uninstalls*-1
-#     date_range = chosen_dates_reset1["event_date"]
+    sum_uninstalls = sum_uninstalls*-1
+    date_range = chosen_dates_reset1["event_date"]
 
-#     versus_fig = go.Figure()
-#     versus_fig.add_trace(go.Bar(x=date_range, y=sum_installs,
-#                     base=0,
-#                     marker_color='crimson',
-#                     name='Installs'))
-#     versus_fig.add_trace(go.Bar(x=date_range, y=sum_uninstalls,
-#                     base=0,
-#                     marker_color='lightslategrey',
-#                     name='Uninstalls'
-#                     ))
+    versus_fig = go.Figure()
+    versus_fig.add_trace(go.Bar(x=date_range, y=sum_installs,
+                    base=0,
+                    marker_color='crimson',
+                    name='Installs'))
+    versus_fig.add_trace(go.Bar(x=date_range, y=sum_uninstalls,
+                    base=0,
+                    marker_color='lightslategrey',
+                    name='Uninstalls'
+                    ))
     
-#     return versus_fig
+    return versus_fig
