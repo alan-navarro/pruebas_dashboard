@@ -19,7 +19,7 @@ class InstallModel:
 
         # connection to SQL:
         data_dates_df = pd.read_sql("select plan_name, TO_CHAR(created_at, 'yyyy-mm-dd') as installed,TO_CHAR(uninstall_date, 'yyyy-mm-dd') as uninstalled,TO_CHAR(reinstall_date, 'yyyy-mm-dd') as reinstalled from sites where created_at between '"+start_date+"' and '"+end_date+"' ",conn)
-        print(data_dates_df)
+        # print(data_dates_df)
 
         # conversion of dates to numbers:
         data_dates_df["installs_count"] = np.where(data_dates_df['installed'].isnull(),0,1)
@@ -30,17 +30,14 @@ class InstallModel:
         
         # installs_df:
         installs_df = pd.DataFrame(pivot1.to_records())
-        installs_df.drop(columns = ["index"], inplace = True)
-        installs_df.rename(columns = {"('installed', '', '')": 'event_date'}, inplace = True)
-        installs_df.columns = [hdr.replace("('sum', 'installs_count', '", "").replace("')", "") \
-                             for hdr in installs_df.columns]
-        
-        copy_installs_df = installs_df.copy().fillna(0)
-        final_df_installs = copy_installs_df.drop(columns = ["cancelled","fraudulent","frozen"], inplace = True)
+        installs_df = installs_df.drop(columns = ["index"])
+        installs_df = installs_df.rename(columns = {"('installed', '', '')": 'event_date'})
+        installs_df.columns = [c.replace("('sum', 'installs_count', '", "").replace("')", "") for c in installs_df.columns]
 
+        before_final_df = installs_df.copy().fillna(0)
+        final_df_installs = before_final_df.drop(columns = ["cancelled","fraudulent","frozen"])
 
         final_df_installs["event_date"] = pd.to_datetime(final_df_installs["event_date"])
-        final_df_installs.set_index("event_date", inplace= True)
-        print(final_df_installs)
+        final_df_installs = final_df_installs.set_index("event_date")
        
         return final_df_installs
